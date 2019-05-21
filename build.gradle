@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group 'de.eternalwings.bukkit'
+version '1.0-SNAPSHOT'
+
+ext {
+    junitVersion = "5.3.2"
+}
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    compile files("${System.getenv('JAVA_HOME')}/lib/tools.jar")
+    testCompile "org.bukkit:bukkit:1.13.2-R0.1-SNAPSHOT"
+    testCompile 'org.bukkit:craftbukkit:1.13.2-R0.1-SNAPSHOT'
+    testCompile("org.junit.jupiter:junit-jupiter-api:$junitVersion")
+    testCompile("org.junit.jupiter:junit-jupiter-params:$junitVersion")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testCompile 'com.google.testing.compile:compile-testing:0.15'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
