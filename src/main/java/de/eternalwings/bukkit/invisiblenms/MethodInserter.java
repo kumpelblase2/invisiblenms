@@ -1,15 +1,13 @@
 package de.eternalwings.bukkit.invisiblenms;
 
 import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.tree.EndPosTable;
+import com.sun.tools.javac.tree.*;
 import com.sun.tools.javac.tree.JCTree.*;
-import com.sun.tools.javac.tree.TreeCopier;
-import com.sun.tools.javac.tree.TreeMaker;
-import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class MethodInserter {
 
@@ -47,13 +45,7 @@ public class MethodInserter {
             @Override
             public void visitApply(JCMethodInvocation tree) {
                 if (tree.getMethodSelect() instanceof JCFieldAccess) {
-                    final JCFieldAccess selectedMethod = (JCFieldAccess) tree.getMethodSelect();
-                    final Name methodNameIdentifier = selectedMethod.getIdentifier();
-                    final JCExpression methodObjectExpression = selectedMethod.getExpression();
-                    if (methodNameIdentifier.contentEquals(SUPER_CALL_METHOD_NAME)
-                            && methodObjectExpression instanceof JCIdent
-                            && ((JCIdent) methodObjectExpression).name.contentEquals(Super.class.getSimpleName())) {
-                        // TODO the above fails with FQ calls to Super.call()
+                    if (shouldReplaceWithSuperCall((JCFieldAccess) tree.getMethodSelect())) {
                         tree = createSuperCall(tree, decl);
                     }
                 }
@@ -67,9 +59,35 @@ public class MethodInserter {
         endPosTable.storeEnd(this.targetTree, methodCopy.getEndPosition(endPosTable) + 1);
     }
 
+    private boolean shouldReplaceWithSuperCall(JCFieldAccess selectedMethod) {
+        final Name methodNameIdentifier = selectedMethod.getIdentifier();
+        if (methodNameIdentifier.contentEquals(SUPER_CALL_METHOD_NAME)) {
+            final JCExpression methodObjectExpression = selectedMethod.getExpression();
+
+            if (methodObjectExpression instanceof JCIdent) {
+                return ((JCIdent) methodObjectExpression).name.contentEquals(Super.class.getSimpleName());
+            } else if (methodObjectExpression instanceof JCFieldAccess) {
+                final String fullyQualifiedAccessName = getFullyQualifiedAccessName(methodObjectExpression);
+                return Objects.equals(fullyQualifiedAccessName, Super.class.getName());
+            }
+        }
+        return false;
+    }
+
     private JCMethodInvocation createSuperCall(JCMethodInvocation tree, JCMethodDecl decl) {
         final JCIdent ident = this.treeMaker.at(((JCFieldAccess) tree.meth).selected.pos).Ident(decl.name.table.fromString(SUPER_KEYWORD));
         final JCFieldAccess superMethod = this.treeMaker.at(tree.meth.pos).Select(ident, decl.name);
         return this.treeMaker.at(tree.pos).Apply(List.nil(), superMethod, tree.args);
+    }
+
+    private static String getFullyQualifiedAccessName(JCTree tree) {
+        if (tree instanceof JCFieldAccess) {
+            final JCFieldAccess fieldAccess = (JCFieldAccess) tree;
+            return getFullyQualifiedAccessName(fieldAccess.selected) + "." + fieldAccess.name.toString();
+        } else if (tree instanceof JCIdent) {
+            return ((JCIdent) tree).name.toString();
+        } else {
+            throw new IllegalStateException();
+        }
     }
 }
