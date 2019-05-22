@@ -5,9 +5,11 @@ import com.sun.tools.javac.tree.*;
 import com.sun.tools.javac.tree.JCTree.*;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
+import de.eternalwings.bukkit.invisiblenms.annotations.CopyAs;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class MethodInserter {
 
@@ -33,8 +35,11 @@ public class MethodInserter {
         final int targetDeclarationPosition = this.targetTree.getEndPosition(endPosTable);
         final int totalOffset = targetDeclarationPosition - originalDeclarationPosition;
 
+        final String targetName = this.getTargetName(decl);
+
         final JCMethodDecl methodCopy = this.copier.copy(decl, new TreeCopyContext(sourceCompilationUnit,
                 this.targetCompilationUnit, totalOffset));
+        methodCopy.name = methodCopy.name.table.fromString(targetName);
         methodCopy.mods = this.treeMaker.at(originalDeclarationPosition).Modifiers(Flags.PUBLIC);
 
         final Map<CharSequence, JCFieldAccess> imports = CompilationUnitExt.getImports(sourceCompilationUnit);
@@ -57,6 +62,30 @@ public class MethodInserter {
         methodCopy.accept(new CopyNecessaryImports(this.treeMaker, imports, this.targetImports, this.targetCompilationUnit));
         this.targetTree.defs = this.targetTree.defs.append(methodCopy);
         endPosTable.storeEnd(this.targetTree, methodCopy.getEndPosition(endPosTable) + 1);
+    }
+
+    private String getTargetName(JCMethodDecl decl) {
+        final Optional<JCAnnotation> nameAnnotationOpt = decl.mods.annotations.stream().filter(jcAnnotation -> {
+            return jcAnnotation.type.tsym.getQualifiedName().contentEquals(CopyAs.class.getTypeName());
+        }).findAny();
+
+        if(nameAnnotationOpt.isPresent()) {
+            final JCAnnotation nameAnnotation = nameAnnotationOpt.get();
+            final Optional<JCExpression> newNameValue = nameAnnotation.args.stream()
+                    .filter(arg -> arg instanceof JCAssign)
+                    .map(arg -> (JCAssign) arg)
+                    .filter(argAssign -> argAssign.lhs instanceof JCIdent && ((JCIdent) argAssign.lhs).name.contentEquals("value"))
+                    .map(argAssign -> argAssign.rhs)
+                    .findAny();
+
+            if(newNameValue.isPresent()) {
+                final JCExpression nameExpression = newNameValue.get();
+                if(nameExpression instanceof JCLiteral) {
+                    return ((JCLiteral) nameExpression).getValue().toString();
+                }
+            }
+        }
+        return decl.name.toString();
     }
 
     private boolean shouldReplaceWithSuperCall(JCFieldAccess selectedMethod) {

@@ -1,6 +1,7 @@
 import java.net.URL;
 
 import de.eternalwings.bukkit.invisiblenms.Super;
+import de.eternalwings.bukkit.invisiblenms.annotations.CopyAs;
 import de.eternalwings.bukkit.invisiblenms.annotations.DontCopy;
 import de.eternalwings.bukkit.invisiblenms.annotations.Mixin;
 
@@ -31,6 +32,10 @@ public interface TestMixin {
     default boolean testBoolean() {
         System.out.println("Hello World!");
         return (System.out != null ? Super.call() : System.err != null);
+    }
+
+    @CopyAs("renamed")
+    default void testRename() {
     }
 
     @DontCopy
