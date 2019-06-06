@@ -10,5 +10,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.METHOD)
 public @interface CopyAs {
+    /**
+     * The target name of the copied method.
+     */
     String value();
 }
