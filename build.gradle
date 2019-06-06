@@ -1,10 +1,11 @@
 plugins {
     id 'java'
     id 'maven-publish'
+    id "com.jfrog.bintray" version "1.8.4"
 }
 
 group 'de.eternalwings.bukkit'
-version '1.0-SNAPSHOT'
+version '0.1.0'
 
 ext {
     junitVersion = "5.3.2"
@@ -27,17 +28,79 @@ dependencies {
     testCompile 'com.google.testing.compile:compile-testing:0.15'
 }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-        }
-    }
-}
-
 test {
     useJUnitPlatform()
     testLogging {
         events "passed", "skipped", "failed"
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+javadoc.failOnError = false
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+publishing {
+    publications {
+        mavenPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId 'de.eternalwings.bukkit'
+            artifactId 'invisiblenms'
+            version '0.1.0'
+
+            pom {
+                name = 'InvisibleNMS'
+                description = 'An annotation processor that allows hiding common NMS implementations in interfaces'
+                url = 'https://github.com/kumpelblase2/invisiblenms'
+                licenses {
+                    license {
+                        name = "MIT"
+                        url = "https://github.com/kumpelblase2/invisiblenms/blob/master/LICENSE"
+                        distribution = "repo"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "kumpelblase2"
+                        name = "Tim Hagemann"
+                        email = "tim+github@eternalwings.de"
+                    }
+                }
+
+                scm {
+                    url = "https://github.com/kumpelblase2/invisiblenms"
+                }
+            }
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_APIKEY')
+    publications = ['mavenPublication']
+
+    pkg {
+        repo = 'Libraries'
+        name = 'invisiblenms'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/kumpelblase2/invisiblenms.git'
+        version {
+            name = '0.1.0'
+            released = new Date()
+        }
     }
 }
