@@ -35,7 +35,8 @@ public class MethodInserter {
 
         final JCMethodDecl methodCopy = this.copier.copy(decl, new TreeCopyContext(sourceCompilationUnit,
                 this.targetCompilationUnit, totalOffset));
-        methodCopy.name = methodCopy.name.table.fromString(targetName);
+        final Name newMethodName = methodCopy.name.table.fromString(targetName);
+        methodCopy.name = newMethodName;
         methodCopy.mods = this.treeMaker.at(originalDeclarationPosition).Modifiers(Flags.PUBLIC);
 
         final Map<CharSequence, JCFieldAccess> imports = CompilationUnitExt.getImports(sourceCompilationUnit);
@@ -47,7 +48,7 @@ public class MethodInserter {
             public void visitApply(JCMethodInvocation tree) {
                 if (tree.getMethodSelect() instanceof JCFieldAccess) {
                     if (shouldReplaceWithSuperCall((JCFieldAccess) tree.getMethodSelect())) {
-                        tree = createSuperCall(tree, decl);
+                        tree = createSuperCall(tree, newMethodName);
                     }
                 }
                 super.visitApply(tree);
@@ -75,9 +76,9 @@ public class MethodInserter {
         return false;
     }
 
-    private JCMethodInvocation createSuperCall(JCMethodInvocation tree, JCMethodDecl decl) {
-        final JCIdent ident = this.treeMaker.at(((JCFieldAccess) tree.meth).selected.pos).Ident(decl.name.table.fromString(SUPER_KEYWORD));
-        final JCFieldAccess superMethod = this.treeMaker.at(tree.meth.pos).Select(ident, decl.name);
+    private JCMethodInvocation createSuperCall(JCMethodInvocation tree, Name methodName) {
+        final JCIdent ident = this.treeMaker.at(((JCFieldAccess) tree.meth).selected.pos).Ident(methodName.table.fromString(SUPER_KEYWORD));
+        final JCFieldAccess superMethod = this.treeMaker.at(tree.meth.pos).Select(ident, methodName);
         return this.treeMaker.at(tree.pos).Apply(List.nil(), superMethod, tree.args);
     }
 
