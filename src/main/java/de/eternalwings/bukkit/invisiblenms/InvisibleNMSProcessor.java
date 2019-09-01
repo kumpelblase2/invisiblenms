@@ -115,6 +115,13 @@ public class InvisibleNMSProcessor extends AbstractProcessor {
 
     private List<Name> getImplementedMixinTypeNames(JCClassDecl tree) {
         return tree.implementing.stream()
+                .map(implement -> {
+                    if(implement instanceof JCTypeApply) {
+                        return ((JCTypeApply) implement).clazz;
+                    } else {
+                        return implement;
+                    }
+                })
                 .filter(expr -> expr instanceof JCIdent)
                 .map(expr -> (JCIdent) expr)
                 .filter(this::isMixinType)
