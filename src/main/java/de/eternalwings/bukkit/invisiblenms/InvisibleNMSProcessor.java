@@ -28,7 +28,10 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@SupportedAnnotationTypes("de.eternalwings.bukkit.invisiblenms.annotations.CopyDefaults")
+@SupportedAnnotationTypes({
+        "de.eternalwings.bukkit.invisiblenms.annotations.CopyDefaults",
+        "de.eternalwings.bukkit.invisiblenms.annotations.Mixin"
+})
 public class InvisibleNMSProcessor extends AbstractProcessor {
 
     private Trees trees;
