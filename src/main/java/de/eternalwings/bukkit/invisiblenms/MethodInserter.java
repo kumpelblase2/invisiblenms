@@ -41,6 +41,9 @@ public class MethodInserter {
 
         final Map<CharSequence, JCFieldAccess> imports = CompilationUnitExt.getImports(sourceCompilationUnit);
 
+        for (int i = 0; i < methodCopy.params.size(); i++) {
+            methodCopy.params.get(i).vartype.type = decl.params.get(i).vartype.type;
+        }
 
         methodCopy.accept(new TreeTranslator() {
 
