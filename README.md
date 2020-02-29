@@ -41,8 +41,16 @@ The reason we use `Super.call()` here instead of the real `super` is because `su
 
 This tool behaves similar to any other annotation processing tool. For example in gradle, you can add it to your dependencies like this:
 ```groovy
+repositories {
+    // ...
+    maven {
+        url "https://dl.bintray.com/kumpelblase2/Libraries"
+    }
+}
+
 dependencies {
-    annotationProcessor 'de.eternalwings.bukkit:invisiblenms:1.0-SNAPSHOT'
+    compileOnly 'de.eternalwings.bukkit:invisiblenms:0.1.1'
+    annotationProcessor 'de.eternalwings.bukkit:invisiblenms:0.1.1'
     // ...
 }
 ```
