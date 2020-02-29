@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'de.eternalwings.bukkit'
-version '0.1.1'
+version '0.1.2'
 
 ext {
     junitVersion = "5.3.2"
@@ -59,7 +59,7 @@ publishing {
             artifact javadocJar
             groupId 'de.eternalwings.bukkit'
             artifactId 'invisiblenms'
-            version '0.1.1'
+            version '0.1.2'
 
             pom {
                 name = 'InvisibleNMS'
@@ -99,7 +99,7 @@ bintray {
         licenses = ['MIT']
         vcsUrl = 'https://github.com/kumpelblase2/invisiblenms.git'
         version {
-            name = '0.1.1'
+            name = '0.1.2'
             released = new Date()
         }
     }
